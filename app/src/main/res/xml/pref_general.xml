@@ -1,0 +1,56 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="@string/pref_general_category_thumbnails_title">
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="show_thumbnails_switch"
+            android:summary="@string/pref_description_show_thumbnails"
+            android:title="@string/pref_title_show_thumbnails" />
+        <ListPreference
+            android:defaultValue="1"
+            android:dependency="show_thumbnails_switch"
+            android:entries="@array/pref_download_thumbnails_list_titles"
+            android:entryValues="@array/pref_download_thumbnails_list_values"
+            android:key="download_thumbnails_list"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="@string/pref_title_download_thumbnails_list" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_general_category_animations_title">
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="list_animation_switch"
+            android:summary="@string/pref_description_enable_list_animations"
+            android:title="@string/pref_title_enable_list_animations" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_general_category_links_title">
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="use_in_app_browser_switch"
+            android:summary="@string/pref_description_use_in_app_browser"
+            android:title="@string/pref_title_use_in_app_browser" />
+    </PreferenceCategory>
+
+    <!-- NOTE: EditTextPreference accepts EditText attributes. -->
+    <!-- NOTE: EditTextPreference's summary should be set to its value by the activity code. -->
+
+    <!--<EditTextPreference-->
+    <!--android:capitalize="words"-->
+    <!--android:defaultValue="@string/pref_default_display_name"-->
+    <!--android:inputType="textCapWords"-->
+    <!--android:key="example_text"-->
+    <!--android:maxLines="1"-->
+    <!--android:selectAllOnFocus="true"-->
+    <!--android:singleLine="true"-->
+    <!--android:title="@string/pref_title_display_name" />-->
+
+    <!-- NOTE: Hide buttons to simplify the UI. Users can touch outside the dialog to
+         dismiss it. -->
+    <!-- NOTE: ListPreference's summary should be set to its value by the activity code. -->
+
+</PreferenceScreen>
