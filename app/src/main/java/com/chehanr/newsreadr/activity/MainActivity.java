@@ -114,14 +114,15 @@ public class MainActivity extends AppCompatActivity
         articlesRecyclerView.setLayoutManager(linearLayoutManager);
         articlesRecyclerView.setAdapter(articlesAdapter);
         articlesRecyclerView.addOnScrollListener(endlessRecyclerViewScrollListener);
-        articlesRecyclerView.addOnItemTouchListener(new com.chehanr.newsreadr.listener.OnItemClickListener() {
+
+        articlesAdapter.setOnItemClickListener(new ArticlesAdapter.ItemClickListener() {
             @Override
-            public void onItemClick(View view, int position) {
+            public void onItemClick(int position, View v) {
                 handleUrlOpening(articlesAdapter.getItem(position));
             }
 
             @Override
-            public void onItemLongClick(View view, int position) {
+            public void onItemLongClick(int position, View v) {
                 handleModalBottomSheetDialogFragment(articlesAdapter.getItem(position));
             }
         });

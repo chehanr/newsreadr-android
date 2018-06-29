@@ -29,6 +29,7 @@ import java.util.List;
 public class ArticlesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final int ITEM = 0;
     private static final int LOADING = 1;
+    private static ItemClickListener itemClickListener;
 
     private List<Article> articleList;
     private Context context;
@@ -223,8 +224,18 @@ public class ArticlesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         return null;
     }
 
+    public void setOnItemClickListener(ItemClickListener itemClickListener) {
+        ArticlesAdapter.itemClickListener = itemClickListener;
+    }
 
-    protected class ArticleItemViewHolder extends RecyclerView.ViewHolder {
+
+    public interface ItemClickListener {
+        void onItemClick(int position, View v);
+
+        void onItemLongClick(int position, View v);
+    }
+
+    protected class ArticleItemViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
         ConstraintLayout articlesConstraintLayout;
         LinearLayout horizontalLinearLayout;
         TextView articleTitleTextView;
@@ -232,7 +243,7 @@ public class ArticlesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         TextView articleDetailTextView;
         ImageView articleThumbnailImageView;
 
-        public ArticleItemViewHolder(View view) {
+        private ArticleItemViewHolder(View view) {
             super(view);
             this.articlesConstraintLayout = view.findViewById(R.id.articles_layout_level_0);
             this.horizontalLinearLayout = view.findViewById(R.id.horizontalLinearLayout);
@@ -240,9 +251,22 @@ public class ArticlesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             this.articleBodyTextView = view.findViewById(R.id.body_textView);
             this.articleDetailTextView = view.findViewById(R.id.detail_textView);
             this.articleThumbnailImageView = view.findViewById(R.id.thumbnail_imageView);
+
+            view.setOnClickListener(this);
+            view.setOnLongClickListener(this);
+        }
+
+        @Override
+        public void onClick(View v) {
+            itemClickListener.onItemClick(getAdapterPosition(), v);
+        }
+
+        @Override
+        public boolean onLongClick(View v) {
+            itemClickListener.onItemLongClick(getAdapterPosition(), v);
+            return true;
         }
     }
-
 
     protected class ArticleLoadingViewHolder extends RecyclerView.ViewHolder {
         TextView articleSectionSectionNumberTextView;
