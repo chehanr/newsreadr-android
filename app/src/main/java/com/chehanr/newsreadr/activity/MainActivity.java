@@ -272,7 +272,8 @@ public class MainActivity extends AppCompatActivity
 
         share.setOnClickListener(v -> {
 //            Toast.makeText(context, "Sharing not available", Toast.LENGTH_SHORT).show();
-            Toast.makeText(context, AppUtils.getArticleIdHash(article), Toast.LENGTH_LONG).show();
+            String hash = AppUtils.getArticleIdHash(article.getArticleTitle(), article.getArticleUrl(), article.getArticleMedia());
+            Toast.makeText(context, hash, Toast.LENGTH_LONG).show();
             mainBottomSheetDialog.dismiss();
         });
 
@@ -289,7 +290,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void saveArticle(Article article) {
-        String articleId = AppUtils.getArticleIdHash(article);
+        String articleId = AppUtils.getArticleIdHash(article.getArticleTitle(), article.getArticleUrl(), article.getArticleMedia());
         if (appDatabase.savedArticlesDao().checkIfSavedArticleExists(articleId)) {
             Toast.makeText(context, "Article already saved", Toast.LENGTH_SHORT).show();
         } else {

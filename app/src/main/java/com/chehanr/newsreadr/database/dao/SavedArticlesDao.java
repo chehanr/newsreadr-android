@@ -29,6 +29,9 @@ public interface SavedArticlesDao {
     @Update(onConflict = OnConflictStrategy.REPLACE)
     void updateSavedArticle(SavedArticle SavedArticle);
 
+    @Query("DELETE FROM SavedArticle WHERE article_id = :articleId")
+    public void removeSavedArticle(String articleId);
+
     @Query("DELETE FROM SavedArticle")
     void removeAllSavedArticles();
 

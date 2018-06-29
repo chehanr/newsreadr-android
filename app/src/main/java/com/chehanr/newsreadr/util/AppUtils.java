@@ -1,16 +1,10 @@
 package com.chehanr.newsreadr.util;
 
-import com.chehanr.newsreadr.model.Article;
-
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public final class AppUtils {
-    public static String getArticleIdHash(Article article) {
-        String title = article.getArticleTitle();
-        String url = article.getArticleUrl();
-        String media = article.getArticleMedia();
-
+    public static String getArticleIdHash(String title, String url, String media) {
         String concatString = title;
         if (url != null) {
             concatString += url;

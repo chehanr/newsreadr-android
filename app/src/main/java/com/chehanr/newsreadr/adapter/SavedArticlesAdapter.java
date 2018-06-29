@@ -10,6 +10,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -19,6 +20,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.chehanr.newsreadr.R;
 import com.chehanr.newsreadr.database.entity.SavedArticle;
+import com.chehanr.newsreadr.model.Article;
 import com.chehanr.newsreadr.util.NetworkUtils;
 import com.chehanr.newsreadr.util.RegexUtils;
 
@@ -26,7 +28,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SavedArticlesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
-    List<SavedArticle> savedArticleList;
+    private static SavedArticlesAdapter.ItemClickListener itemClickListener;
+
+    private List<SavedArticle> savedArticleList;
     private Context context;
 
     private boolean prefShowThumbnails;
@@ -80,12 +84,24 @@ public class SavedArticlesAdapter extends RecyclerView.Adapter<RecyclerView.View
         }
     }
 
+    public void remove(SavedArticle article) {
+        int position = getSavedArticleList().indexOf(article);
+        if (position > -1) {
+            getSavedArticleList().remove(position);
+            notifyItemRemoved(position);
+        }
+    }
+
     @NonNull
     private RecyclerView.ViewHolder getViewHolder(ViewGroup parent, LayoutInflater inflater) {
         RecyclerView.ViewHolder viewHolder;
         View view = inflater.inflate(R.layout.list_item_article, parent, false);
         viewHolder = new SavedArticleViewHolder(view);
         return viewHolder;
+    }
+
+    public SavedArticle getItem(int position) {
+        return getSavedArticleList().get(position);
     }
 
     private void handleArticleThumbnail(SavedArticlesAdapter.SavedArticleViewHolder savedArticleViewHolder, String thumbnailUri) {
@@ -141,7 +157,18 @@ public class SavedArticlesAdapter extends RecyclerView.Adapter<RecyclerView.View
         return null;
     }
 
-    static class SavedArticleViewHolder extends RecyclerView.ViewHolder {
+    public void setOnItemClickListener(SavedArticlesAdapter.ItemClickListener itemClickListener) {
+        SavedArticlesAdapter.itemClickListener = itemClickListener;
+    }
+
+
+    public interface ItemClickListener {
+        void onItemClick(int position, View v);
+
+        void onItemLongClick(int position, View v);
+    }
+
+    protected class SavedArticleViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
         ConstraintLayout articlesConstraintLayout;
         LinearLayout horizontalLinearLayout;
         TextView articleTitleTextView;
@@ -157,6 +184,20 @@ public class SavedArticlesAdapter extends RecyclerView.Adapter<RecyclerView.View
             this.articleBodyTextView = view.findViewById(R.id.body_textView);
             this.articleDetailTextView = view.findViewById(R.id.detail_textView);
             this.articleThumbnailImageView = view.findViewById(R.id.thumbnail_imageView);
+
+            view.setOnClickListener(this);
+            view.setOnLongClickListener(this);
+        }
+
+        @Override
+        public void onClick(View v) {
+            itemClickListener.onItemClick(getAdapterPosition(), v);
+        }
+
+        @Override
+        public boolean onLongClick(View v) {
+            itemClickListener.onItemLongClick(getAdapterPosition(), v);
+            return true;
         }
     }
 }
