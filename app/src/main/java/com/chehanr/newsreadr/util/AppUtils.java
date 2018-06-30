@@ -29,19 +29,4 @@ public final class AppUtils {
         }
         return null;
     }
-
-    public static String checkNetworkIssues(Integer apiStatusCode, Integer remoteStatusCode) {
-        String result;
-        if (!NetworkUtils.isConnected()) {
-            result = "NOT_CONNECTED";
-        } else if (apiStatusCode != null && apiStatusCode != 200) {
-            result = "API_DOWN";
-        } else if (remoteStatusCode != null && remoteStatusCode != 200) {
-            result = "PAGE_DOWN";
-        } else {
-            result = null;
-        }
-        return result;
-
-    }
 }

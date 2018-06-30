@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -42,9 +43,7 @@ public class SavedArticlesActivity extends AppCompatActivity {
 
     private SharedPreferences sharedPreferences;
 
-    private List<SavedArticle> savedArticleList;
-
-    private Boolean prefListAnimation, prefUseInAppBrowser;
+    private boolean prefListAnimation, prefUseInAppBrowser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,9 +64,9 @@ public class SavedArticlesActivity extends AppCompatActivity {
 
         appDatabase = AppDatabase.getDatabase(getApplicationContext());
 
-        savedArticleList = appDatabase.savedArticlesDao().getAllSavedArticles();
+        List<SavedArticle> articles = appDatabase.savedArticlesDao().getAllSavedArticles();
 
-        savedArticlesAdapter.addAll(savedArticleList);
+        savedArticlesAdapter.addAll(articles);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -86,12 +85,14 @@ public class SavedArticlesActivity extends AppCompatActivity {
         });
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+
         handleSharedPreferences();
     }
 
     private void handleSharedPreferences() {
         // Handle list animation pref.
         prefListAnimation = sharedPreferences.getBoolean("list_animation_switch", true);
+
         if (savedArticlesAdapter != null) {
             handleAnimation();
         }
@@ -108,11 +109,12 @@ public class SavedArticlesActivity extends AppCompatActivity {
 //        articlesRecyclerView.notify(articlesAdapter);
     }
 
-    private void handleUrlOpening(SavedArticle article) {
-        String url = article.getArticleUrl();
-        if (url == null) {
-            url = article.getArticleMedia();
-        }
+    private void handleUrlOpening(@NonNull SavedArticle article) {
+        String url = article.articleUrl;
+
+        if (url == null)
+            url = article.articleMedia;
+
         if (RegexUtils.isURL(url)) {
             try {
                 Uri uri = Uri.parse(url);
@@ -128,7 +130,7 @@ public class SavedArticlesActivity extends AppCompatActivity {
                 Toast.makeText(context, "No external browser found", Toast.LENGTH_SHORT).show();
             }
         } else {
-            Toast.makeText(context, "Can not open url", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Cannot open url", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -157,6 +159,7 @@ public class SavedArticlesActivity extends AppCompatActivity {
 
     private void removeArticle(SavedArticle article) {
         String articleId = AppUtils.getArticleIdHash(article.getArticleTitle(), article.getArticleUrl(), article.getArticleMedia());
+
         if (appDatabase.savedArticlesDao().checkIfSavedArticleExists(articleId)) {
             try {
                 if (articleId != null) {

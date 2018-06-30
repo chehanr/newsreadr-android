@@ -36,12 +36,14 @@ import com.chehanr.newsreadr.model.ArticleResponse;
 import com.chehanr.newsreadr.rest.ApiClient;
 import com.chehanr.newsreadr.rest.ApiInterface;
 import com.chehanr.newsreadr.util.AppUtils;
+import com.chehanr.newsreadr.util.NetworkUtils;
 import com.chehanr.newsreadr.util.RegexUtils;
 import com.chehanr.newsreadr.util.SnackbarUtils;
 import com.chehanr.newsreadr.util.Utils;
 import com.thefinestartist.finestwebview.FinestWebView;
 
 import java.util.List;
+import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -67,12 +69,10 @@ public class MainActivity extends AppCompatActivity
     private SharedPreferences sharedPreferences;
     private Parcelable state;
 
-    private List<Article> articleList;
-
     private AppDatabase appDatabase;
 
     private String pageUrl;
-    private Integer apiStatusCode, remoteStatusCode, currentPage, availablePages;
+    private int currentPage, availablePages;
 
     private Boolean prefListAnimation, prefUseInAppBrowser;
 
@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
                 page += 1;
-                loadArticles(page);
+                loadDataFromApi(page);
             }
         };
 
@@ -134,36 +134,48 @@ public class MainActivity extends AppCompatActivity
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         handleSharedPreferences();
 
-        loadArticles(INIT_PAGE);
+        loadDataFromApi(INIT_PAGE);
     }
 
     private void loadDataFromApi(int page) {
+        showProgressBar(true);
+
         Call<ArticleResponse> call = apiInterface.getArticles(page);
         call.enqueue(new Callback<ArticleResponse>() {
+            int apiStatusCode, remoteStatusCode = 999;
+
             @Override
             public void onResponse(@NonNull Call<ArticleResponse> call, @NonNull Response<ArticleResponse> response) {
                 showProgressBar(false);
 
+                ArticleResponse articleResponse = response.body();
+                apiStatusCode = response.code();
+
                 if (!response.isSuccessful()) {
+                    handleNetworkIssues(apiStatusCode, remoteStatusCode);
                     return;
                 }
 
-                ArticleResponse articleResponse = response.body();
-                apiStatusCode = response.code();
                 if (articleResponse != null) {
+                    if (!NetworkUtils.isConnected())
+                        handleOffline(false);
+
+                    List<Article> articles = articleResponse.getArticles();
                     pageUrl = articleResponse.getPageUrl();
                     remoteStatusCode = articleResponse.getRemoteStatusCode();
                     currentPage = articleResponse.getPage();
                     availablePages = articleResponse.getAvailablePages();
-                    articleList = articleResponse.getArticles();
-                    if (articleList != null) {
-                        Log.i(TAG, String.format("loaded page: %d/%d", currentPage, availablePages));
-                        articlesAdapter.addAll(articleList);
+
+                    if (articles != null) {
+                        Log.d(TAG, String.format("loaded page: %d/%d", currentPage, availablePages));
+                        articlesAdapter.addAll(articles);
                         articlesAdapter.notifyDataSetChanged();
                     } else if (availablePages <= currentPage - 1) {
                         SnackbarUtils.with(rootView)
-                                .setMessage("You've browsed all available articles")
+                                .setMessage("You browsed all available articles")
                                 .show();
+                    } else {
+                        handleNetworkIssues(apiStatusCode, remoteStatusCode);
                     }
                 }
             }
@@ -171,27 +183,17 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onFailure(@NonNull Call<ArticleResponse> call, Throwable t) {
                 Log.e(TAG, t.toString());
-                handleFailure();
+                showProgressBar(false);
+                handleNetworkIssues(apiStatusCode, remoteStatusCode);
             }
         });
-    }
-
-
-    public void loadArticles(Integer page) {
-        showProgressBar(true);
-        String networkIssues = AppUtils.checkNetworkIssues(apiStatusCode, remoteStatusCode);
-        if (networkIssues == null) {
-            loadDataFromApi(page);
-        } else {
-            handleFailure();
-            loadDataFromApi(page);
-        }
     }
 
 
     private void handleSharedPreferences() {
         // Handle list animation pref.
         prefListAnimation = sharedPreferences.getBoolean("list_animation_switch", true);
+
         if (articlesAdapter != null) {
             handleAnimation();
         }
@@ -200,7 +202,7 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    public void handleAnimation() {
+    private void handleAnimation() {
 //        TODO make changes.
         if (prefListAnimation) {
 //            articlesAdapter.openLoadAnimation(BaseQuickAdapter.ALPHAIN);
@@ -209,38 +211,49 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    private void handleFailure() {
-        String networkIssues = AppUtils.checkNetworkIssues(apiStatusCode, remoteStatusCode);
-        if (networkIssues != null) {
-            switch (networkIssues) {
-                case "NOT_CONNECTED":
-                    SnackbarUtils.with(rootView)
-                            .setMessage("You are offline")
-                            .setDuration(SnackbarUtils.LENGTH_LONG)
-                            .show();
-                    break;
-                case "API_DOWN":
-                    SnackbarUtils.with(rootView)
-                            .setMessage("API unresponsive")
-                            .setDuration(SnackbarUtils.LENGTH_LONG)
-                            .show();
-                    break;
-                case "PAGE_DOWN":
-                    SnackbarUtils.with(rootView)
-                            .setMessage("Website unreachable")
-                            .setDuration(SnackbarUtils.LENGTH_LONG)
-                            .show();
-                    break;
-            }
+    private void handleOffline(boolean mode) {
+        String msg;
+
+        if (mode)
+            msg = "Device offline";
+        else
+//            TODO add last response dateTime.
+            msg = "Browsing offline";
+
+        SnackbarUtils.with(rootView)
+                .setMessage(msg)
+                .setDuration(SnackbarUtils.LENGTH_LONG)
+                .show();
+    }
+
+
+    private void handleNetworkIssues(int apiStatusCode, int remoteStatusCode) {
+        String msg;
+
+        if (!NetworkUtils.isConnected()) {
+            handleOffline(true);
+        } else if (apiStatusCode != 999 && apiStatusCode != 200) {
+            msg = String.format(Locale.getDefault(), "API unresponsive (Code: %d)", apiStatusCode);
+            SnackbarUtils.with(rootView)
+                    .setMessage(msg)
+                    .setDuration(SnackbarUtils.LENGTH_LONG)
+                    .show();
+        } else if (remoteStatusCode != 999 && remoteStatusCode != 200) {
+            msg = String.format(Locale.getDefault(), "Website unreachable (Code: %d)", remoteStatusCode);
+            SnackbarUtils.with(rootView)
+                    .setMessage(msg)
+                    .setDuration(SnackbarUtils.LENGTH_LONG)
+                    .show();
         }
     }
 
 
-    private void handleUrlOpening(Article article) {
+    private void handleUrlOpening(@NonNull Article article) {
         String url = article.getArticleUrl();
-        if (url == null) {
+
+        if (url == null)
             url = article.getArticleMedia();
-        }
+
         if (RegexUtils.isURL(url)) {
             try {
                 Uri uri = Uri.parse(url);
@@ -256,11 +269,11 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(context, "No external browser found", Toast.LENGTH_SHORT).show();
             }
         } else {
-            Toast.makeText(context, "Can not open url", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Cannot open url", Toast.LENGTH_SHORT).show();
         }
     }
 
-    public void handleModalBottomSheetDialogFragment(Article article) {
+    private void handleModalBottomSheetDialogFragment(Article article) {
         View view = getLayoutInflater().inflate(R.layout.bottom_sheet_dialog_main, null);
 
         mainBottomSheetDialog = new BottomSheetDialog(this);
@@ -283,14 +296,15 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
-    public void handleRefresh() {
+    private void handleRefresh() {
         articlesAdapter.removeAll();
         endlessRecyclerViewScrollListener.resetState();
-        loadArticles(INIT_PAGE);
+        loadDataFromApi(INIT_PAGE);
     }
 
     private void saveArticle(Article article) {
         String articleId = AppUtils.getArticleIdHash(article.getArticleTitle(), article.getArticleUrl(), article.getArticleMedia());
+
         if (appDatabase.savedArticlesDao().checkIfSavedArticleExists(articleId)) {
             Toast.makeText(context, "Article already saved", Toast.LENGTH_SHORT).show();
         } else {
@@ -307,11 +321,10 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void showProgressBar(Boolean visibility) {
-        if (visibility) {
+        if (visibility)
             progressBar.setVisibility(View.VISIBLE);
-        } else {
+        else
             progressBar.setVisibility(View.GONE);
-        }
     }
 
     protected void onSaveInstanceState(Bundle outState) {
