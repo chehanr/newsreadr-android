@@ -63,7 +63,6 @@ public class MainActivity extends AppCompatActivity
     private ArticlesAdapter articlesAdapter;
     private EndlessRecyclerViewScrollListener endlessRecyclerViewScrollListener;
     private ProgressBar progressBar;
-    private BottomSheetDialog mainBottomSheetDialog;
 
     private ApiInterface apiInterface;
     private SharedPreferences sharedPreferences;
@@ -276,23 +275,32 @@ public class MainActivity extends AppCompatActivity
     private void handleModalBottomSheetDialogFragment(Article article) {
         View view = getLayoutInflater().inflate(R.layout.bottom_sheet_dialog_main, null);
 
-        mainBottomSheetDialog = new BottomSheetDialog(this);
-        mainBottomSheetDialog.setContentView(view);
-        mainBottomSheetDialog.show();
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
+        bottomSheetDialog.setContentView(view);
+        bottomSheetDialog.show();
 
         LinearLayout share = view.findViewById(R.id.share_bottom_sheet_dialog_main);
         LinearLayout save = view.findViewById(R.id.save_bottom_sheet_dialog_main);
 
         share.setOnClickListener(v -> {
-//            Toast.makeText(context, "Sharing not available", Toast.LENGTH_SHORT).show();
-            String hash = AppUtils.getArticleIdHash(article.getArticleTitle(), article.getArticleUrl(), article.getArticleMedia());
-            Toast.makeText(context, hash, Toast.LENGTH_LONG).show();
-            mainBottomSheetDialog.dismiss();
+            bottomSheetDialog.dismiss();
+
+            String url = article.getArticleUrl();
+
+            if (url == null)
+                url = article.getArticleMedia();
+
+            Intent shareIntent = new Intent();
+            shareIntent.setAction(Intent.ACTION_SEND);
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, article.getArticleTitle());
+            shareIntent.putExtra(Intent.EXTRA_TEXT, url);
+            shareIntent.setType("text/plain");
+            startActivity(Intent.createChooser(shareIntent, getResources().getText(R.string.dialog_share_to)));
         });
 
         save.setOnClickListener(v -> {
             saveArticle(article);
-            mainBottomSheetDialog.dismiss();
+            bottomSheetDialog.dismiss();
         });
     }
 

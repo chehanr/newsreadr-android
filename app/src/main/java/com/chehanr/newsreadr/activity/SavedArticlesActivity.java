@@ -39,7 +39,6 @@ public class SavedArticlesActivity extends AppCompatActivity {
     private SavedArticlesAdapter savedArticlesAdapter;
     private RecyclerView savedArticlesRecyclerView;
     private AppDatabase appDatabase;
-    private BottomSheetDialog bottomSheetDialog;
 
     private SharedPreferences sharedPreferences;
 
@@ -137,7 +136,7 @@ public class SavedArticlesActivity extends AppCompatActivity {
     public void handleModalBottomSheetDialogFragment(SavedArticle article) {
         View view = getLayoutInflater().inflate(R.layout.bottom_sheet_dialog_saved_articles, null);
 
-        bottomSheetDialog = new BottomSheetDialog(this);
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
         bottomSheetDialog.setContentView(view);
         bottomSheetDialog.show();
 
@@ -145,10 +144,19 @@ public class SavedArticlesActivity extends AppCompatActivity {
         LinearLayout delete = view.findViewById(R.id.delete_bottom_sheet_dialog_main);
 
         share.setOnClickListener(v -> {
-//            Toast.makeText(context, "Sharing not available", Toast.LENGTH_SHORT).show();
-            String hash = AppUtils.getArticleIdHash(article.articleTitle, article.articleUrl, article.articleMedia);
-            Toast.makeText(context, hash, Toast.LENGTH_LONG).show();
             bottomSheetDialog.dismiss();
+
+            String url = article.getArticleUrl();
+
+            if (url == null)
+                url = article.getArticleMedia();
+
+            Intent shareIntent = new Intent();
+            shareIntent.setAction(Intent.ACTION_SEND);
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, article.getArticleTitle());
+            shareIntent.putExtra(Intent.EXTRA_TEXT, url);
+            shareIntent.setType("text/plain");
+            startActivity(Intent.createChooser(shareIntent, getResources().getText(R.string.dialog_share_to)));
         });
 
         delete.setOnClickListener(v -> {

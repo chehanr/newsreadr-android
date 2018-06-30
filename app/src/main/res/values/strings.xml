@@ -11,6 +11,8 @@
     <string name="action_save">Save</string>
     <string name="action_delete">Delete</string>
 
+    <string name="dialog_share_to">Share to</string>
+
     <string name="title_activity_web_view">WebViewActivity</string>
     <string name="title_activity_saved_articles">Saved articles</string>
     <string name="title_activity_settings">Settings</string>
