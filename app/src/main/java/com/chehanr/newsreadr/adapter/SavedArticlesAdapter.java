@@ -1,6 +1,5 @@
 package com.chehanr.newsreadr.adapter;
 
-import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
@@ -18,9 +17,9 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.chehanr.newsreadr.R;
 import com.chehanr.newsreadr.database.entity.SavedArticle;
+import com.chehanr.newsreadr.util.AppUtils;
 import com.chehanr.newsreadr.util.GlideUtils;
 import com.chehanr.newsreadr.util.NetworkUtils;
-import com.chehanr.newsreadr.util.RegexUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,8 +56,8 @@ public class SavedArticlesAdapter extends RecyclerView.Adapter<RecyclerView.View
         SavedArticle savedArticle = getSavedArticleList().get(position); // Movie
         final SavedArticleViewHolder savedArticleViewHolder = (SavedArticleViewHolder) holder;
         savedArticleViewHolder.articleTitleTextView.setText(savedArticle.getArticleTitle());
-        savedArticleViewHolder.articleBodyTextView.setText(savedArticle.getArticleBody());
-        savedArticleViewHolder.articleDetailTextView.setText(handleArticleDetail(savedArticle.getArticleType(), savedArticle.getArticleUrl(), savedArticle.getArticleMedia()));
+        savedArticleViewHolder.articleBodyTextView.setText(AppUtils.handleArticleBody(savedArticle.getArticleBody()));
+        savedArticleViewHolder.articleDetailTextView.setText(AppUtils.handleArticleDetail(savedArticle.getArticleType(), savedArticle.getArticleUrl(), savedArticle.getArticleMedia()));
         handleArticleThumbnail(savedArticleViewHolder, savedArticle.getArticleThumbnailUri());
     }
 
@@ -136,24 +135,6 @@ public class SavedArticlesAdapter extends RecyclerView.Adapter<RecyclerView.View
         } else {
             articleItemViewHolder.horizontalLinearLayout.setVisibility(View.GONE);
         }
-    }
-
-    private String handleArticleDetail(String articleType, String articleUrl, String articleMedia) {
-        try {
-            if (articleType != null) {
-                if (RegexUtils.isURL(articleUrl)) {
-                    return String.format("%s (%s)", articleType, NetworkUtils.getHostAddress(articleUrl));
-                } else if (RegexUtils.isURL(articleMedia)) {
-                    return String.format("%s (%s)", articleType, NetworkUtils.getHostAddress(articleMedia));
-                } else {
-                    return null;
-                }
-            }
-        } catch (ActivityNotFoundException e) {
-            e.printStackTrace();
-            return null;
-        }
-        return null;
     }
 
     public void setOnItemClickListener(SavedArticlesAdapter.ItemClickListener itemClickListener) {

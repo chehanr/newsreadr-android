@@ -18,6 +18,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.chehanr.newsreadr.R;
 import com.chehanr.newsreadr.model.Article;
+import com.chehanr.newsreadr.util.AppUtils;
 import com.chehanr.newsreadr.util.GlideUtils;
 import com.chehanr.newsreadr.util.NetworkUtils;
 import com.chehanr.newsreadr.util.RegexUtils;
@@ -74,8 +75,8 @@ public class ArticlesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             case ITEM:
                 final ArticleItemViewHolder articleItemViewHolder = (ArticleItemViewHolder) holder;
                 articleItemViewHolder.articleTitleTextView.setText(article.getArticleTitle());
-                articleItemViewHolder.articleBodyTextView.setText(article.getArticleBody() + "...");
-                articleItemViewHolder.articleDetailTextView.setText(handleArticleDetail(article.getArticleType(), article.getArticleUrl(), article.getArticleMedia()));
+                articleItemViewHolder.articleBodyTextView.setText(AppUtils.handleArticleBody(article.getArticleBody()));
+                articleItemViewHolder.articleDetailTextView.setText(AppUtils.handleArticleDetail(article.getArticleType(), article.getArticleUrl(), article.getArticleMedia()));
                 handleArticleThumbnail(articleItemViewHolder, article.getArticleThumbnailUri());
                 break;
 
