@@ -37,7 +37,7 @@ public final class AppUtils {
 //        TODO add regex stuff.
         String string;
 
-        if (articleBody != null) {
+        if (articleBody != null && !articleBody.isEmpty()) {
             if (articleBody.endsWith("."))
                 string = articleBody;
             else
@@ -49,7 +49,7 @@ public final class AppUtils {
 
     public static String handleArticleDetail(String articleType, String articleUrl, String articleMedia) {
         try {
-            if (articleType != null) {
+            if (articleType != null && !articleType.isEmpty()) {
                 if (RegexUtils.isURL(articleUrl)) {
                     return String.format("%s (%s)", articleType, NetworkUtils.getHostAddress(articleUrl));
                 } else if (RegexUtils.isURL(articleMedia)) {
