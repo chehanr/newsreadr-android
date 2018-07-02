@@ -48,10 +48,6 @@ public class ArticlesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         prefDownloadThumbnailsList = sharedPreferences.getString("download_thumbnails_list", "1");
     }
 
-    private List<Article> getArticleList() {
-        return articleList;
-    }
-
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -97,6 +93,9 @@ public class ArticlesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         return viewHolder;
     }
 
+    private List<Article> getArticleList() {
+        return articleList;
+    }
 
     @Override
     public int getItemCount() {

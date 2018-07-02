@@ -29,13 +29,13 @@ public class SavedArticlesAdapter extends RecyclerView.Adapter<RecyclerView.View
     private static SavedArticlesAdapter.ItemClickListener itemClickListener;
 
     private List<SavedArticle> savedArticleList;
-    private Context context;
+    private Context mContext;
 
     private boolean prefShowThumbnails;
     private String prefDownloadThumbnailsList;
 
     public SavedArticlesAdapter(Context context) {
-        this.context = context;
+        this.mContext = context;
         savedArticleList = new ArrayList<>();
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
@@ -43,14 +43,10 @@ public class SavedArticlesAdapter extends RecyclerView.Adapter<RecyclerView.View
         prefDownloadThumbnailsList = sharedPreferences.getString("download_thumbnails_list", "1");
     }
 
-    public List<SavedArticle> getSavedArticleList() {
-        return savedArticleList;
-    }
-
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        RecyclerView.ViewHolder viewHolder = null;
+        RecyclerView.ViewHolder viewHolder;
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         viewHolder = getViewHolder(parent, inflater);
         return viewHolder;
@@ -64,6 +60,18 @@ public class SavedArticlesAdapter extends RecyclerView.Adapter<RecyclerView.View
         savedArticleViewHolder.articleBodyTextView.setText(savedArticle.getArticleBody());
         savedArticleViewHolder.articleDetailTextView.setText(handleArticleDetail(savedArticle.getArticleType(), savedArticle.getArticleUrl(), savedArticle.getArticleMedia()));
         handleArticleThumbnail(savedArticleViewHolder, savedArticle.getArticleThumbnailUri());
+    }
+
+    @NonNull
+    private RecyclerView.ViewHolder getViewHolder(ViewGroup parent, LayoutInflater inflater) {
+        RecyclerView.ViewHolder viewHolder;
+        View view = inflater.inflate(R.layout.list_item_article, parent, false);
+        viewHolder = new SavedArticleViewHolder(view);
+        return viewHolder;
+    }
+
+    private List<SavedArticle> getSavedArticleList() {
+        return savedArticleList;
     }
 
     @Override
@@ -88,14 +96,6 @@ public class SavedArticlesAdapter extends RecyclerView.Adapter<RecyclerView.View
             getSavedArticleList().remove(position);
             notifyItemRemoved(position);
         }
-    }
-
-    @NonNull
-    private RecyclerView.ViewHolder getViewHolder(ViewGroup parent, LayoutInflater inflater) {
-        RecyclerView.ViewHolder viewHolder;
-        View view = inflater.inflate(R.layout.list_item_article, parent, false);
-        viewHolder = new SavedArticleViewHolder(view);
-        return viewHolder;
     }
 
     public SavedArticle getItem(int position) {
@@ -159,7 +159,6 @@ public class SavedArticlesAdapter extends RecyclerView.Adapter<RecyclerView.View
     public void setOnItemClickListener(SavedArticlesAdapter.ItemClickListener itemClickListener) {
         SavedArticlesAdapter.itemClickListener = itemClickListener;
     }
-
 
     public interface ItemClickListener {
         void onItemClick(int position, View v);
