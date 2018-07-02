@@ -10,17 +10,15 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.chehanr.newsreadr.R;
 import com.chehanr.newsreadr.database.entity.SavedArticle;
-import com.chehanr.newsreadr.model.Article;
+import com.chehanr.newsreadr.util.GlideUtils;
 import com.chehanr.newsreadr.util.NetworkUtils;
 import com.chehanr.newsreadr.util.RegexUtils;
 
@@ -104,38 +102,39 @@ public class SavedArticlesAdapter extends RecyclerView.Adapter<RecyclerView.View
         return getSavedArticleList().get(position);
     }
 
-    private void handleArticleThumbnail(SavedArticlesAdapter.SavedArticleViewHolder savedArticleViewHolder, String thumbnailUri) {
-//        TODO get url dynamically.
+    private void handleArticleThumbnail(SavedArticleViewHolder articleItemViewHolder, String thumbnailUri) {
+        Context context = articleItemViewHolder.articleThumbnailImageView.getContext();
+        ImageView thumbnailImageView = articleItemViewHolder.articleThumbnailImageView;
+//        TODO get base url dynamically.
         String thumbnailUrl = "http://infolanka.com/news/" + thumbnailUri;
+        int defaultImage = R.drawable.ic_launcher_background;
+
         RequestOptions requestOptions = new RequestOptions()
                 .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
                 .centerCrop()
-                .placeholder(R.drawable.ic_launcher_background)
-                .error(R.drawable.ic_launcher_background)
+                .placeholder(defaultImage)
+                .error(defaultImage)
                 .override(100, 100);
+
         if (prefShowThumbnails) {
-            savedArticleViewHolder.horizontalLinearLayout.setVisibility(View.VISIBLE);
-            if ((prefDownloadThumbnailsList.equals("1") || prefDownloadThumbnailsList.equals("2"))) {
-                Glide.with(context)
-                        .asBitmap()
-                        .apply(requestOptions)
-                        .load(thumbnailUrl)
-                        .into(savedArticleViewHolder.articleThumbnailImageView);
+            articleItemViewHolder.horizontalLinearLayout.setVisibility(View.VISIBLE);
+
+            if (thumbnailUri == null) {
+                GlideUtils.setDrawable(context, requestOptions, defaultImage, thumbnailImageView);
+                return;
+            }
+            if (prefDownloadThumbnailsList.equals("1") || prefDownloadThumbnailsList.equals("2")) {
+                GlideUtils.setUrl(context, requestOptions, thumbnailUrl, thumbnailImageView);
                 if (prefDownloadThumbnailsList.equals("2")) {
                     if (NetworkUtils.isWifiConnected()) {
-                        Glide.with(context)
-                                .asBitmap()
-                                .apply(requestOptions)
-                                .load(thumbnailUrl)
-                                .into(savedArticleViewHolder.articleThumbnailImageView);
+                        GlideUtils.setUrl(context, requestOptions, thumbnailUrl, thumbnailImageView);
                     } else {
-                        Glide.with(context)
-                                .clear(savedArticleViewHolder.articleThumbnailImageView);
+                        GlideUtils.clearView(context, thumbnailImageView);
                     }
                 }
             }
         } else {
-            savedArticleViewHolder.horizontalLinearLayout.setVisibility(View.GONE);
+            articleItemViewHolder.horizontalLinearLayout.setVisibility(View.GONE);
         }
     }
 

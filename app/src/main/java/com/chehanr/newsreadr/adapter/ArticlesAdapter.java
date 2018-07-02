@@ -14,11 +14,11 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.chehanr.newsreadr.R;
 import com.chehanr.newsreadr.model.Article;
+import com.chehanr.newsreadr.util.GlideUtils;
 import com.chehanr.newsreadr.util.NetworkUtils;
 import com.chehanr.newsreadr.util.RegexUtils;
 
@@ -32,7 +32,7 @@ public class ArticlesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     private static ItemClickListener itemClickListener;
 
     private List<Article> articleList;
-    private Context context;
+    private Context mContext;
 
     private boolean isLoadingAdded = false;
 
@@ -40,7 +40,7 @@ public class ArticlesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     private String prefDownloadThumbnailsList;
 
     public ArticlesAdapter(Context context) {
-        this.context = context;
+        this.mContext = context;
         articleList = new ArrayList<>();
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
@@ -48,10 +48,9 @@ public class ArticlesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         prefDownloadThumbnailsList = sharedPreferences.getString("download_thumbnails_list", "1");
     }
 
-    public List<Article> getArticleList() {
+    private List<Article> getArticleList() {
         return articleList;
     }
-
 
     @NonNull
     @Override
@@ -109,7 +108,6 @@ public class ArticlesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         return (position == getArticleList().size() - 1 && isLoadingAdded) ? LOADING : ITEM;
     }
 
-
     public void add(Article article) {
         getArticleList().add(article);
         notifyItemInserted(getArticleList().size() - 1);
@@ -149,7 +147,6 @@ public class ArticlesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         return getItemCount() == 0;
     }
 
-
 //    public void addLoadingFooter() {
 //        isLoadingAdded = true;
 //        add(new Article());
@@ -171,33 +168,34 @@ public class ArticlesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         return getArticleList().get(position);
     }
 
-    private void handleArticleThumbnail(ArticlesAdapter.ArticleItemViewHolder articleItemViewHolder, String thumbnailUri) {
-//        TODO get url dynamically.
+    private void handleArticleThumbnail(ArticleItemViewHolder articleItemViewHolder, String thumbnailUri) {
+        Context context = articleItemViewHolder.articleThumbnailImageView.getContext();
+        ImageView thumbnailImageView = articleItemViewHolder.articleThumbnailImageView;
+//        TODO get base url dynamically.
         String thumbnailUrl = "http://infolanka.com/news/" + thumbnailUri;
+        int defaultImage = R.drawable.ic_launcher_background;
+
         RequestOptions requestOptions = new RequestOptions()
                 .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
                 .centerCrop()
-                .placeholder(R.drawable.ic_launcher_background)
-                .error(R.drawable.ic_launcher_background)
+                .placeholder(defaultImage)
+                .error(defaultImage)
                 .override(100, 100);
+
         if (prefShowThumbnails) {
             articleItemViewHolder.horizontalLinearLayout.setVisibility(View.VISIBLE);
-            if ((prefDownloadThumbnailsList.equals("1") || prefDownloadThumbnailsList.equals("2"))) {
-                Glide.with(context)
-                        .asBitmap()
-                        .apply(requestOptions)
-                        .load(thumbnailUrl)
-                        .into(articleItemViewHolder.articleThumbnailImageView);
+
+            if (thumbnailUri == null) {
+                GlideUtils.setDrawable(context, requestOptions, defaultImage, thumbnailImageView);
+                return;
+            }
+            if (prefDownloadThumbnailsList.equals("1") || prefDownloadThumbnailsList.equals("2")) {
+                GlideUtils.setUrl(context, requestOptions, thumbnailUrl, thumbnailImageView);
                 if (prefDownloadThumbnailsList.equals("2")) {
                     if (NetworkUtils.isWifiConnected()) {
-                        Glide.with(context)
-                                .asBitmap()
-                                .apply(requestOptions)
-                                .load(thumbnailUrl)
-                                .into(articleItemViewHolder.articleThumbnailImageView);
+                        GlideUtils.setUrl(context, requestOptions, thumbnailUrl, thumbnailImageView);
                     } else {
-                        Glide.with(context)
-                                .clear(articleItemViewHolder.articleThumbnailImageView);
+                        GlideUtils.clearView(context, thumbnailImageView);
                     }
                 }
             }
@@ -227,7 +225,6 @@ public class ArticlesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     public void setOnItemClickListener(ItemClickListener itemClickListener) {
         ArticlesAdapter.itemClickListener = itemClickListener;
     }
-
 
     public interface ItemClickListener {
         void onItemClick(int position, View v);
