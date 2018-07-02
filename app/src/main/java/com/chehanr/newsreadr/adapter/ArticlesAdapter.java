@@ -1,6 +1,5 @@
 package com.chehanr.newsreadr.adapter;
 
-import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
@@ -21,7 +20,6 @@ import com.chehanr.newsreadr.model.Article;
 import com.chehanr.newsreadr.util.AppUtils;
 import com.chehanr.newsreadr.util.GlideUtils;
 import com.chehanr.newsreadr.util.NetworkUtils;
-import com.chehanr.newsreadr.util.RegexUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -202,24 +200,6 @@ public class ArticlesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         } else {
             articleItemViewHolder.horizontalLinearLayout.setVisibility(View.GONE);
         }
-    }
-
-    private String handleArticleDetail(String articleType, String articleUrl, String articleMedia) {
-        try {
-            if (articleType != null) {
-                if (RegexUtils.isURL(articleUrl)) {
-                    return String.format("%s (%s)", articleType, NetworkUtils.getHostAddress(articleUrl));
-                } else if (RegexUtils.isURL(articleMedia)) {
-                    return String.format("%s (%s)", articleType, NetworkUtils.getHostAddress(articleMedia));
-                } else {
-                    return null;
-                }
-            }
-        } catch (ActivityNotFoundException e) {
-            e.printStackTrace();
-            return null;
-        }
-        return null;
     }
 
     public void setOnItemClickListener(ItemClickListener itemClickListener) {
